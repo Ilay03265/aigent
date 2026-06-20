@@ -4,14 +4,14 @@ import gradio as gr
 # pyrefly: ignore [missing-import]
 from dotenv import load_dotenv
 
-from agent.core import chat_with_agent
-
 # Load environment variables
 load_dotenv()
 
-def respond(message, chat_history):
+from agent.core import chat_with_agent
+
+async def respond(message, chat_history):
     # This function will handle the chat history and agent response
-    response = chat_with_agent(message, chat_history)
+    response = await chat_with_agent(message, chat_history)
     chat_history.append({"role": "user", "content": message})
     chat_history.append({"role": "assistant", "content": response})
     return "", chat_history
