@@ -10,7 +10,7 @@ from .websearchAgent import planner_agent
 tool1 = planner_agent.as_tool(tool_name="websearch_agent", tool_description="websearch for answers for questions with Airport topic , that needs a deep research in the web to answer it correctly")
 
 console = Console()
-
+AEROAPI_MAX_PAGES = 2
 AEROAPI_KEY = os.environ.get("AEROAPI_KEY")
 AEROAPI_BASE_URL = "https://aeroapi.flightaware.com/aeroapi"
 
@@ -46,7 +46,7 @@ def _fetch_all_pages(url: str, list_key: str) -> list[dict]:
             
             cursor = data.get("links", {}).get("next")
             pages_fetched = 1
-            while cursor and pages_fetched < 40: # Pull up to 40 pages max
+            while cursor and pages_fetched < AEROAPI_MAX_PAGES:
                 next_url = f"{AEROAPI_BASE_URL}{cursor}"
                 next_resp = requests.get(next_url, headers=headers, timeout=15)
                 if next_resp.status_code == 200:
@@ -107,7 +107,7 @@ def get_congestion_level(airport_code: str) -> str:
     if total_scheduled == 0:
         return json.dumps({"congestion_ratio": 0.0, "delayed_count": 0, "total_scheduled": 0})
         
-    delayed_count = sum(1 for flight in departures if flight.get("departure_delay", 0) > 0)
+    delayed_count = sum(1 for flight in departures if flight.get("departure_delay") or 0 > 0)
     congestion_ratio = delayed_count / total_scheduled
     
     return json.dumps({"congestion_ratio": congestion_ratio, "delayed_count": delayed_count, "total_scheduled": total_scheduled})
@@ -173,7 +173,7 @@ def calculate_airport_kpi(airport_code: str) -> str:
     total_deps = len(departures)
     congestion_ratio = 0.0
     if total_deps > 0:
-        delayed_count = sum(1 for flight in departures if flight.get("departure_delay", 0) > 0)
+        delayed_count = sum(1 for flight in departures if flight.get("departure_delay") or 0 > 0)
         congestion_ratio = delayed_count / total_deps
         
     # 3. Long-haul
